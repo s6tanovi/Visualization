@@ -14,6 +14,9 @@ export default Ember.Component.extend({
         //selection = []; todo needs to be reset
         this.set('selection', selection);
 
+
+
+
         var self = this;
 
         this.$(this.get('element')).fancytree({
@@ -23,7 +26,7 @@ export default Ember.Component.extend({
             icons:false,
             selectMode: 3,
             glyph: {
-                map: {               
+                map: {
                     checkbox: "glyphicon glyphicon-unchecked",
                     checkboxSelected: "glyphicon glyphicon-check",
                     checkboxUnknown: "glyphicon glyphicon-share",
@@ -35,8 +38,8 @@ export default Ember.Component.extend({
                 }
             },
             wide: {
-                iconWidth: "0.3em", 
-                iconSpacing: "0.5em", 
+                iconWidth: "0.3em",
+                iconSpacing: "0.5em",
                 levelOfs: "1.5em"
             },
             filter: {
@@ -59,7 +62,9 @@ export default Ember.Component.extend({
                 var branch_root = self.getBranchRoot(node);
                 var branch_root_title = branch_root.title;
                 var selected = tree.getSelectedNodes();
-              
+
+
+
                 if (node.selected) {
                     tree.filterBranches(function(node) {
                         if (node.title === branch_root_title) {
@@ -68,7 +73,8 @@ export default Ember.Component.extend({
                             node.hideCheckbox = true;
                             node.render(true);
                         }
-                    });              
+                    });
+
 
                     for (var i = 0; i < selected.length; i++) {
                         var node_ = selected[i];
@@ -79,6 +85,7 @@ export default Ember.Component.extend({
                         var node_type = node_.data.type;
                         var node_role = node_.data.role;
                         var node_datatype = node_.data.datatype;
+
 
                         var already_selected = _.some(selection, function(value) {
                             return _.isEqual(value.parent, node_path);
@@ -99,12 +106,15 @@ export default Ember.Component.extend({
                         }
                     }
                 } else {
-                   
+
                     selection = _.filter(selection, function(item) {
 
                         var is_selected = false;
 
                         for (var i = 0; i < selected.length; i++) {
+
+
+
                             var node_ = selected[i];
                             var node_path = self.getNodePath(node_).slice().reverse();
 
@@ -117,6 +127,7 @@ export default Ember.Component.extend({
                     });
 
                     if (selected.length === 0) {
+
                         tree.clearFilter();
                         tree.visit(function(node) {
                             var type = node.data.type;

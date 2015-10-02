@@ -154,7 +154,7 @@ var sparql_data_module = function () {
                     case "literal":
                     case "typed-literal":
                         scaleOfMeasurement = predictRDFPropertySOM(propertyURI);
-                        
+
                         if(!scaleOfMeasurement) {
                         var datatype = result.sampleValue.datatype;
                         if (datatype) {
@@ -182,7 +182,7 @@ var sparql_data_module = function () {
                     special: _.contains(propertyTypes, "http://linda-project.eu/linda-visualization#SpecialProperty"),
                     type: scaleOfMeasurement
                 };
-                
+
                 properties.push(dataInfo);
             }
 
@@ -192,7 +192,7 @@ var sparql_data_module = function () {
 
     function predictRDFPropertySOM(propertyURI) {
         switch(propertyURI) {
-            case  "http://www.w3.org/2003/01/geo/wgs84_pos#lat": 
+            case  "http://www.w3.org/2003/01/geo/wgs84_pos#lat":
                return "Geographic Latitude";
             case "http://www.w3.org/2003/01/geo/wgs84_pos#long":
                 return "Geographic Longitude";
@@ -234,7 +234,7 @@ var sparql_data_module = function () {
     function parse(endpoint, graph, selection) {
         var dimension = selection.dimension;
         var multidimension = selection.multidimension;
-       
+
         return queryInstances(endpoint, graph, dimension.concat(multidimension));
     }
 
@@ -337,8 +337,8 @@ var sparql_data_module = function () {
                     if(typeof(parsedValue) !== 'undefined') {
                         return parsedValue;
                     }
-                } 
-                
+                }
+
                 // if no (known) datatype is given, try same parsing algorithm as for CSV
                 return util.toScalar(value);
             case "uri":
@@ -396,7 +396,7 @@ var sparql_data_module = function () {
             case "http://www.w3.org/2001/XMLSchema#date":
                 return new Date(value);
             case "http://www.w3.org/2001/XMLSchema#string":
-                // Can plain literals be returned as xsd:string in newer 
+                // Can plain literals be returned as xsd:string in newer
                 // versions of RDF/SPARQL? If so, uses toScalar here to handle
                 // datasets with missing types
                 return value;

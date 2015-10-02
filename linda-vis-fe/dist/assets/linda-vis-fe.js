@@ -35,46 +35,113 @@ define('linda-vis-fe/components/data-table', ['exports', 'ember', 'linda-vis-fe/
     'use strict';
 
     exports['default'] = Ember['default'].Component.extend({
-        tagName: "table",
+        tagName: 'table',
         list: [],
         columns: [],
-        classNames: ["no-wrap"],
+        classNames: ['no-wrap'],
         table: null,
         setContent: (function () {
             console.log("TABLE COMPONENT - GENERATING PREVIEW");
 
             var self = this;
-            var selection = this.get("preview");
-            var datasource = this.get("datasource");
+            var selection = this.get('preview');
+            var datasource = this.get('datasource');
+
+            /*---Filters---*/
+            var fs = document.getElementById("filterSelect");
+            /*---Filters---*/
 
             if (selection.length > 0) {
                 var columns = table_data_module['default'].getColumns(selection, datasource);
 
+                //console.log("---");
+
+                /*---Filters---*/
+                fs.options.length = 0;
+                var sk = 0;
+                for (var i = 0; i < selection.length; i++) {
+
+                    console.log(selection[i].datatype);
+                    if (selection[i].datatype == "Number") {
+                        //console.log(sk);
+                        //console.log(selection[i].label);
+
+                        fs.options[sk] = new Option(selection[i].label, i);
+                        sk += 1;
+                    }
+                }
+                /*---Filters---*/
+
                 table_data_module['default'].getContent(selection, datasource).then(function (content) {
 
-                    if (self.get("table")) {
-                        self.get("table").api().clear().destroy();
+                    if (self.get('table')) {
+                        self.get('table').api().clear().destroy();
                         self.$().empty();
                     }
 
                     var table = self.$().dataTable({
                         responsive: {
                             details: {
-                                type: "inline"
+                                type: 'inline'
                             }
                         },
                         "data": content.slice(1),
                         "columns": columns
                     });
-                    self.set("table", table);
+
+                    self.set('table', table);
+
+                    /*---Filters---*/
+
+                    $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
+
+                        if (fs.selectedIndex > -1) {
+                            var min = parseInt($('#min').val(), 10);
+
+                            var max = parseInt($('#max').val(), 10);
+
+                            var age = parseFloat(data[fs.options[fs.selectedIndex].value]) || 0; // use data for the fsIndex column
+
+                            if (isNaN(min) && isNaN(max) || isNaN(min) && age <= max || min <= age && isNaN(max) || min <= age && age <= max) {
+                                return true;
+                            }
+                            return false;
+                        }
+                        return true; //?????
+                    });
+
+                    /*---Filters---*/
+
+                    /*---Filters---*/
+
+                    // Event listener to the two range filtering inputs to redraw on input
+                    $('#min, #max').keyup(function () {
+                        table.fnDraw(); //!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                    });
+
+                    /*---Filters---*/
+
+                    /*---Filters---*/
+                    fs.onchange = function () {
+                        $('#min').val("");
+                        $('#max').val("");
+                        table.fnDraw();
+                    };
+
+                    /*---Filters---*/
                 });
             } else {
-                if (self.get("table")) {
-                    self.get("table").api().clear().destroy();
-                    self.$().empty();
+                    /*---Filters---*/
+                    //fs.options.length=0;
+                    /*---Filters---*/
+
+                    if (self.get('table')) {
+                        self.get('table').api().clear().destroy();
+                        self.$().empty();
+                    }
                 }
-            }
-        }).observes("preview.[]").on("didInsertElement")
+        }).observes('preview.[]').on('didInsertElement')
+
     });
 
 });
@@ -92,8 +159,9 @@ define('linda-vis-fe/components/draggable-item', ['exports', 'ember'], function 
             var data = this.get('data');
             var jsonData = JSON.stringify(data);
             event.dataTransfer.setData('text/plain', jsonData);
-            event.dataTransfer.effectAllowed = 'copy';
-        } });
+            event.dataTransfer.effectAllowed = "copy";
+        }
+    });
 
 });
 define('linda-vis-fe/components/droppable-area', ['exports', 'ember'], function (exports, Ember) {
@@ -173,20 +241,20 @@ define('linda-vis-fe/components/tree-selection', ['exports', 'ember'], function 
     'use strict';
 
     exports['default'] = Ember['default'].Component.extend({
-        tagName: "div",
+        tagName: 'div',
         tree: null,
         setContent: (function () {
             console.log("TREE SELECTION COMPONENT - CREATING SELECTION TREE");
-            var content = this.get("treedata");
-            var selection = this.get("selection");
+            var content = this.get('treedata');
+            var selection = this.get('selection');
             console.dir(JSON.stringify(selection));
 
             //selection = []; todo needs to be reset
-            this.set("selection", selection);
+            this.set('selection', selection);
 
             var self = this;
 
-            this.$(this.get("element")).fancytree({
+            this.$(this.get('element')).fancytree({
                 extensions: ["filter", "glyph", "edit", "wide"],
                 source: content,
                 checkbox: true,
@@ -254,7 +322,7 @@ define('linda-vis-fe/components/tree-selection', ['exports', 'ember'], function 
                                 return _.isEqual(value.parent, node_path);
                             });
 
-                            if (!already_selected && node_.hideCheckbox === false && node_type !== "Class") {
+                            if (!already_selected && node_.hideCheckbox === false && node_type !== 'Class') {
 
                                 selection.pushObject({
                                     label: node_label,
@@ -273,6 +341,7 @@ define('linda-vis-fe/components/tree-selection', ['exports', 'ember'], function 
                             var is_selected = false;
 
                             for (var i = 0; i < selected.length; i++) {
+
                                 var node_ = selected[i];
                                 var node_path = self.getNodePath(node_).slice().reverse();
 
@@ -285,6 +354,7 @@ define('linda-vis-fe/components/tree-selection', ['exports', 'ember'], function 
                         });
 
                         if (selected.length === 0) {
+
                             tree.clearFilter();
                             tree.visit(function (node) {
                                 var type = node.data.type;
@@ -294,10 +364,10 @@ define('linda-vis-fe/components/tree-selection', ['exports', 'ember'], function 
                         }
                     }
 
-                    self.set("selection", selection);
+                    self.set('selection', selection);
                 }
             });
-        }).observes("treedata").on("didInsertElement"),
+        }).observes('treedata').on('didInsertElement'),
         getNodePath: function getNodePath(node) {
             var node_path_with_labels = [];
             node_path_with_labels.push({ id: node.key, label: node.title });
@@ -344,47 +414,47 @@ define('linda-vis-fe/controllers/datasource', ['exports', 'ember', 'linda-vis-fe
     exports['default'] = Ember['default'].Controller.extend({
         isToggled: true,
         treeContent: (function () {
-            console.log("DATASOURCE CONTROLLER");
-            var dataInfo = this.get("model"); // data sources
+            console.log('DATASOURCE CONTROLLER');
+            var dataInfo = this.get('model'); // data sources
             if (!dataInfo) {
                 return {};
             }
 
-            this.set("selectedDatasource", dataInfo);
+            this.set('selectedDatasource', dataInfo);
 
-            var previousSelection = this.get("previousSelection");
+            var previousSelection = this.get('previousSelection');
             if (previousSelection.length === 0) {
                 return treeselection_data['default'].initialize(dataInfo);
             } else {
                 return treeselection_data['default'].restore(dataInfo, previousSelection);
             }
-        }).property("model", "previousSelection"),
+        }).property('model', 'previousSelection'),
         previousSelection: [],
         dataSelection: [],
         selectedDatasource: null,
         resetSelection: (function () {
-            this.get("dataSelection").length = 0;
-        }).observes("model"),
+            this.get('dataSelection').length = 0;
+        }).observes('model'),
         actions: {
             visualize: function visualize() {
                 var self = this;
-                var selection = this.get("dataSelection");
-                var datasource = this.get("selectedDatasource");
+                var selection = this.get('dataSelection');
+                var datasource = this.get('selectedDatasource');
                 var selected = treeselection_data['default'].getDataSelection(selection, datasource);
-                var dataselection = this.store.createRecord("dataselection", selected);
-                console.log("VISUALIZE");
+                var dataselection = this.store.createRecord('dataselection', selected);
+                console.log('VISUALIZE');
                 dataselection.save().then(function (responseDataselection) {
                     console.log("SAVED DATA SELECTION. TRANSITION TO VISUALIZATION ROUTE .....");
                     console.dir(responseDataselection);
-                    self.transitionToRoute("visualization", "dataselection", responseDataselection.id);
+                    self.transitionToRoute('visualization', 'dataselection', responseDataselection.id);
                 });
             },
             toggle: function toggle() {
-                var toggled = this.get("isToggled");
+                var toggled = this.get('isToggled');
                 if (toggled) {
-                    this.set("isToggled", false);
+                    this.set('isToggled', false);
                 } else {
-                    this.set("isToggled", true);
+                    this.set('isToggled', true);
                 }
             }
         }
@@ -421,15 +491,15 @@ define('linda-vis-fe/controllers/visualization', ['exports', 'ember', 'linda-vis
         slideShowContainer: Ember['default'].ContainerView.create(),
         datasource: Ember['default'].computed.alias("selectedVisualization.datasource"),
         visualizationConfiguration: [{}],
-        visualizationSVG: "",
-        exportFormats: ["SVG", "PNG"],
-        selectedFormat: "PNG",
+        visualizationSVG: '',
+        exportFormats: ['SVG', 'PNG'],
+        selectedFormat: 'PNG',
         configName: "",
         categorizedProperties: (function () {
             var categorizedProperties = {};
-            var selectedVisualization = this.get("selectedVisualization");
-            var dataselection = selectedVisualization.get("dataselection");
-            var propertyInfos = dataselection.get("propertyInfos");
+            var selectedVisualization = this.get('selectedVisualization');
+            var dataselection = selectedVisualization.get('dataselection');
+            var propertyInfos = dataselection.get('propertyInfos');
 
             for (var i = 0; i < propertyInfos.length; i++) {
                 var propertyInfo = propertyInfos[i];
@@ -446,22 +516,23 @@ define('linda-vis-fe/controllers/visualization', ['exports', 'ember', 'linda-vis
                 categorizedProperties[category].items.push(propertyInfo);
             }
 
-            console.log("CATEGORIZED PROPERTIES");
+            console.log('CATEGORIZED PROPERTIES');
             console.dir(_.values(categorizedProperties));
 
             return _.values(categorizedProperties);
-        }).property("selectedVisualization"),
+        }).property('selectedVisualization'),
         initializeVisualization: (function () {
             console.log("VISUALIZATION CONTROLLER - INITIALIZE VISUALIZATION ... ");
-            this.set("drawnVisualization", null);
+            this.set('drawnVisualization', null);
+            this.set('isToggled', true);
 
-            var selectedVisualization = this.get("selectedVisualization");
-            console.log("SELECTED VISUALIZATION");
+            var selectedVisualization = this.get('selectedVisualization');
+            console.log('SELECTED VISUALIZATION');
             console.dir(selectedVisualization);
 
             // Reset configuration map
             var configArray = [{}];
-            this.set("visualizationConfiguration", configArray);
+            this.set('visualizationConfiguration', configArray);
 
             if (!selectedVisualization) {
                 return;
@@ -477,37 +548,37 @@ define('linda-vis-fe/controllers/visualization', ['exports', 'ember', 'linda-vis
             mapping.structureOptions = customMapping.structureOptions;
             mapping.layoutOptions = customMapping.layoutOptions;
 
-            console.log("MAPPING - STRUCTURE OPTIONS");
+            console.log('MAPPING - STRUCTURE OPTIONS');
             console.dir(mapping.structureOptions);
 
-            console.log("MAPPING - LAYOUT OPTIONS");
+            console.log('MAPPING - LAYOUT OPTIONS');
             console.dir(mapping.layoutOptions);
 
-            this.set("structureOptions", mapping.structureOptions);
-            this.set("layoutOptions", mapping.layoutOptions);
+            this.set('structureOptions', mapping.structureOptions);
+            this.set('layoutOptions', mapping.layoutOptions);
 
             // Ensures that bindings on drawnVisualizations are triggered only now
-            this.set("drawnVisualization", selectedVisualization);
-        }).observes("selectedVisualization"),
+            this.set('drawnVisualization', selectedVisualization);
+        }).observes('selectedVisualization'),
         setSuggestedVisualization: (function () {
-            var topSuggestion = this.get("firstObject");
-            this.set("selectedVisualization", topSuggestion);
-        }).observes("model.[]"),
+            var topSuggestion = this.get('firstObject');
+            this.set('selectedVisualization', topSuggestion);
+        }).observes('model.[]'),
         actions: {
             exportPNG: function exportPNG() {
-                var visualization = vis_registry['default'].getVisualization(this.get("selectedVisualization").get("name"));
+                var visualization = vis_registry['default'].getVisualization(this.get('selectedVisualization').get("name"));
                 visualization.export_as_PNG().then(function (pngURL) {
                     window.open(pngURL);
                 });
             },
             exportSVG: function exportSVG() {
-                var visualization = vis_registry['default'].getVisualization(this.get("selectedVisualization").get("name"));
+                var visualization = vis_registry['default'].getVisualization(this.get('selectedVisualization').get("name"));
                 var svgURL = visualization.export_as_SVG();
                 window.open(svgURL);
             },
             "export": function _export() {
-                var visualization = vis_registry['default'].getVisualization(this.get("selectedVisualization").get("visualizationName"));
-                if (this.get("selectedFormat") === "PNG") {
+                var visualization = vis_registry['default'].getVisualization(this.get('selectedVisualization').get("visualizationName"));
+                if (this.get('selectedFormat') === 'PNG') {
                     visualization.export_as_PNG().then(function (pngURL) {
                         window.open(pngURL);
                     });
@@ -517,20 +588,20 @@ define('linda-vis-fe/controllers/visualization', ['exports', 'ember', 'linda-vis
                 }
             },
             publish: function publish() {
-                var visualization = vis_registry['default'].getVisualization(this.get("selectedVisualization").get("visualizationName"));
-                this.set("visualizationSVG", visualization.get_SVG());
+                var visualization = vis_registry['default'].getVisualization(this.get('selectedVisualization').get("visualizationName"));
+                this.set('visualizationSVG', visualization.get_SVG());
             },
             save: function save() {
                 console.log("SAVE VISUALIZATION");
                 // send actual visualization model to backend
-                var selectedVisualization = this.get("selectedVisualization");
+                var selectedVisualization = this.get('selectedVisualization');
                 console.dir(selectedVisualization);
 
-                var configurationName = this.get("configName");
+                var configurationName = this.get('configName');
 
                 // send current visualization configuration to backend
-                console.log("The value is " + selectedVisualization.get("configurationName"));
-                selectedVisualization.set("configurationName", configurationName);
+                console.log("The value is " + selectedVisualization.get('configurationName'));
+                selectedVisualization.set('configurationName', configurationName);
 
                 selectedVisualization.save().then(function () {
                     console.log("SAVED SUCCESSFULLY");
@@ -544,23 +615,26 @@ define('linda-vis-fe/controllers/visualization', ['exports', 'ember', 'linda-vis
                 });
             },
             chooseVisualization: function chooseVisualization(visualization) {
-                this.set("selectedVisualization", visualization);
+                this.set('selectedVisualization', visualization);
             },
             select: function select() {
                 console.log("CHANGE DATASELECTION");
-                var selectedVisualization = this.get("selectedVisualization");
-                var dataselectionID = selectedVisualization.get("dataselection").id;
-                var datasourceID = selectedVisualization.get("dataselection.datasource").id;
+                var selectedVisualization = this.get('selectedVisualization');
+                var dataselectionID = selectedVisualization.get('dataselection').id;
+                var datasourceID = selectedVisualization.get('dataselection.datasource').id;
 
-                this.transitionToRoute("dataselection", dataselectionID, datasourceID);
+                this.transitionToRoute('dataselection', dataselectionID, datasourceID);
             },
             toggle: function toggle() {
-                var toggled = this.get("isToggled");
-                if (toggled) {
-                    this.set("isToggled", false);
-                } else {
-                    this.set("isToggled", true);
-                }
+                var toggled = this.get('isToggled');
+                var controller = this;
+                Ember['default'].run(function () {
+                    if (toggled) {
+                        controller.set('isToggled', false);
+                    } else {
+                        controller.set('isToggled', true);
+                    }
+                });
             }
         }
     });
@@ -591,11 +665,28 @@ define('linda-vis-fe/initializers/export-application-global', ['exports', 'ember
 
   exports.initialize = initialize;
 
-  function initialize(container, application) {
-    var classifiedName = Ember['default'].String.classify(config['default'].modulePrefix);
+  function initialize() {
+    var application = arguments[1] || arguments[0];
+    if (config['default'].exportApplicationGlobal !== false) {
+      var value = config['default'].exportApplicationGlobal;
+      var globalName;
 
-    if (config['default'].exportApplicationGlobal && !window[classifiedName]) {
-      window[classifiedName] = application;
+      if (typeof value === 'string') {
+        globalName = value;
+      } else {
+        globalName = Ember['default'].String.classify(config['default'].modulePrefix);
+      }
+
+      if (!window[globalName]) {
+        window[globalName] = application;
+
+        application.reopen({
+          willDestroy: function willDestroy() {
+            this._super.apply(this, arguments);
+            delete window[globalName];
+          }
+        });
+      }
     }
   }
 
@@ -656,17 +747,17 @@ define('linda-vis-fe/router', ['exports', 'ember', 'linda-vis-fe/config/environm
     });
 
     Router.map(function () {
-        this.route('visualization', {
+        this.route("visualization", {
             path: '/visualization/:source_type/:id'
         });
-        this.route('datasource', {
+        this.route("datasource", {
             path: '/datasource/:name/:location/:graph/:format'
         });
-        this.route('dataselection', {
+        this.route("dataselection", {
             path: '/dataselection/:selection/:datasource'
         });
-        this.route('saved-visualizations');
-        this.route('configure');
+        this.route("saved-visualizations");
+        this.route("configure");
     });
 
     exports['default'] = Router;
@@ -720,7 +811,7 @@ define('linda-vis-fe/routes/datasource', ['exports', 'ember'], function (exports
 
     var DatasourceRoute = Ember['default'].Route.extend({
         model: function model(params) {
-            var ds = this.store.createRecord("datasource", {
+            var ds = this.store.createRecord('datasource', {
                 name: decodeURIComponent(params.name),
                 location: decodeURIComponent(params.location),
                 graph: decodeURIComponent(params.graph),
@@ -746,7 +837,7 @@ define('linda-vis-fe/routes/saved-visualizations', ['exports', 'ember'], functio
         model: function model(params) {
             console.log("LOAD VISUALIZATION VISUALIZATIONS");
             console.dir(params);
-            return this.store.find("visualization", { source_type: "visualizationConfiguration" }).then(function (visualizations) {
+            return this.store.find('visualization', { source_type: "visualizationConfiguration" }).then(function (visualizations) {
                 console.log("STORED VISUALIZATIONS");
                 console.dir(visualizations);
                 return visualizations;
@@ -768,7 +859,7 @@ define('linda-vis-fe/routes/visualization', ['exports', 'ember'], function (expo
         model: function model(params) {
             console.log("Requesting visualization model and recommendations from the backend for {" + params.source_type + ", " + params.id + "}");
             console.dir(params);
-            return this.store.find("visualization", { source_type: params.source_type, id: params.id }).then(function (visualizations) {
+            return this.store.find('visualization', { source_type: params.source_type, id: params.id }).then(function (visualizations) {
                 console.log("Visualizations:");
                 console.dir(visualizations);
                 return visualizations;
@@ -1281,7 +1372,7 @@ define('linda-vis-fe/templates/datasource', ['exports'], function (exports) {
           dom.setAttribute(el1,"class","glyphicon glyphicon-resize-full");
           dom.setAttribute(el1,"aria-hidden","true");
           dom.appendChild(el0, el1);
-          var el1 = dom.createTextNode(" \n");
+          var el1 = dom.createTextNode("\n");
           dom.appendChild(el0, el1);
           return el0;
         },
@@ -1323,7 +1414,7 @@ define('linda-vis-fe/templates/datasource', ['exports'], function (exports) {
           dom.setAttribute(el1,"class","glyphicon glyphicon-resize-small");
           dom.setAttribute(el1,"aria-hidden","true");
           dom.appendChild(el0, el1);
-          var el1 = dom.createTextNode(" \n");
+          var el1 = dom.createTextNode("\n");
           dom.appendChild(el0, el1);
           return el0;
         },
@@ -1394,10 +1485,10 @@ define('linda-vis-fe/templates/datasource', ['exports'], function (exports) {
         dom.appendChild(el4, el5);
         var el5 = dom.createComment("");
         dom.appendChild(el4, el5);
-        var el5 = dom.createTextNode("  \n            ");
+        var el5 = dom.createTextNode("\n            ");
         dom.appendChild(el4, el5);
         dom.appendChild(el3, el4);
-        var el4 = dom.createTextNode("\n            ");
+        var el4 = dom.createTextNode("\n\n            ");
         dom.appendChild(el3, el4);
         var el4 = dom.createElement("div");
         dom.setAttribute(el4,"class","panel-footer clearfix");
@@ -1407,13 +1498,13 @@ define('linda-vis-fe/templates/datasource', ['exports'], function (exports) {
         var el4 = dom.createTextNode("\n        ");
         dom.appendChild(el3, el4);
         dom.appendChild(el2, el3);
-        var el3 = dom.createTextNode("                                                      \n    ");
+        var el3 = dom.createTextNode("\n    ");
         dom.appendChild(el2, el3);
         dom.appendChild(el1, el2);
-        var el2 = dom.createTextNode("           \n    ");
+        var el2 = dom.createTextNode("\n    ");
         dom.appendChild(el1, el2);
         var el2 = dom.createElement("div");
-        var el3 = dom.createTextNode("\n        ");
+        var el3 = dom.createTextNode("\n\n        ");
         dom.appendChild(el2, el3);
         var el3 = dom.createComment(" Data Selection Preview ");
         dom.appendChild(el2, el3);
@@ -1455,10 +1546,101 @@ define('linda-vis-fe/templates/datasource', ['exports'], function (exports) {
         dom.appendChild(el4, el5);
         var el5 = dom.createComment("");
         dom.appendChild(el4, el5);
-        var el5 = dom.createTextNode(" \n            ");
+        var el5 = dom.createTextNode("\n            ");
         dom.appendChild(el4, el5);
         dom.appendChild(el3, el4);
+        var el4 = dom.createTextNode("\n\n            ");
+        dom.appendChild(el3, el4);
+        var el4 = dom.createComment("Filters");
+        dom.appendChild(el3, el4);
         var el4 = dom.createTextNode("\n            ");
+        dom.appendChild(el3, el4);
+        var el4 = dom.createElement("div");
+        dom.setAttribute(el4,"class","panel-footer clearfix");
+        var el5 = dom.createTextNode("\n                ");
+        dom.appendChild(el4, el5);
+        var el5 = dom.createElement("h1");
+        dom.setAttribute(el5,"class","panel-title pull-left");
+        var el6 = dom.createTextNode("Filters");
+        dom.appendChild(el5, el6);
+        dom.appendChild(el4, el5);
+        var el5 = dom.createTextNode("\n            ");
+        dom.appendChild(el4, el5);
+        dom.appendChild(el3, el4);
+        var el4 = dom.createTextNode("\n\n            ");
+        dom.appendChild(el3, el4);
+        var el4 = dom.createElement("tr");
+        var el5 = dom.createTextNode("\n                ");
+        dom.appendChild(el4, el5);
+        var el5 = dom.createElement("style");
+        var el6 = dom.createTextNode("\n                    input {\n                    padding: 6px 12px;\n                    margin-bottom: 0;\n                    font-size: 14px;\n                    font-weight: normal;\n                    line-height: 1.42857143;\n                    text-align: center;\n                    white-space: nowrap;\n                    vertical-align: middle;\n                    margin-left: 10px;\n                    margin-right: 10px;\n                    margin-bottom: 10px;\n                    margin-top: 10px;\n                    border-color: #ccc;\n                    border-bottom-color: rgb(204, 204, 204);\n                    border-bottom-left-radius: 4px;\n                    border-bottom-right-radius: 4px;\n                    border-bottom-style: solid;\n                    border-bottom-width: 1.33333337306976px;\n                    border-left-color: rgb(204, 204, 204);\n                    border-left-style: solid;\n                    border-left-width: 1.33333337306976px;\n                    border-right-color: rgb(204, 204, 204);\n                    border-right-style: solid;\n                    border-right-width: 1.33333337306976px;\n                    border-top-color: rgb(204, 204, 204);\n                    border-top-left-radius: 4px;\n                    border-top-right-radius: 4px;\n                    border-top-style: solid;\n                    border-top-width: 1.33333337306976px;\n                    height: 34.6666679382324px;\n                    width: 140px\n                    }\n                ");
+        dom.appendChild(el5, el6);
+        dom.appendChild(el4, el5);
+        var el5 = dom.createTextNode("\n\n               ");
+        dom.appendChild(el4, el5);
+        var el5 = dom.createElement("style");
+        var el6 = dom.createTextNode("\n                    select {\n                    margin-left: 10px;\n                    margin-right: 10px;\n                    margin-bottom: 10px;\n                    margin-top: 10px;\n                    overflow: visible;\n                    border-color: #ccc;\n                    padding: 6px 12px;\n                    margin-bottom: 1;\n                    font-size: 14px;\n                    font-weight: normal;\n                    line-height: 1.42857143;\n                    text-align: center;\n                    white-space: nowrap;\n                    vertical-align: middle;\n                    -ms-touch-action: manipulation;\n                    touch-action: manipulation;\n                    cursor: pointer;\n                    border: 0.5px solid grey;\n                    border-radius: 4px;\n                    height: 34.6666679382324px;\n                    width: 180.567px;\n                    border-bottom-color: rgb(204, 204, 204);\n                    border-bottom-left-radius: 4px;\n                    border-bottom-right-radius: 4px;\n                    border-bottom-style: solid;\n                    border-bottom-width: 1.33333337306976px;\n                    border-left-color: rgb(204, 204, 204);\n                    border-left-style: solid;\n                    border-left-width: 1.33333337306976px;\n                    border-right-color: rgb(204, 204, 204);\n                    border-right-style: solid;\n                    border-right-width: 1.33333337306976px;\n                    border-top-color: rgb(204, 204, 204);\n                    border-top-left-radius: 4px;\n                    border-top-right-radius: 4px;\n                    border-top-style: solid;\n                    border-top-width: 1.33333337306976px;\n                     }\n                ");
+        dom.appendChild(el5, el6);
+        dom.appendChild(el4, el5);
+        var el5 = dom.createTextNode("\n\n                ");
+        dom.appendChild(el4, el5);
+        var el5 = dom.createElement("style");
+        var el6 = dom.createTextNode("\n                    label {\n                    color: rgb(51, 51, 51);\n                    cursor: default;\n                    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;\n                    font-size: 13.3333330154419px;\n                    font-weight: bold;\n                    }\n                ");
+        dom.appendChild(el5, el6);
+        dom.appendChild(el4, el5);
+        var el5 = dom.createTextNode("\n\n                ");
+        dom.appendChild(el4, el5);
+        var el5 = dom.createElement("select");
+        dom.setAttribute(el5,"name","Tree values");
+        dom.setAttribute(el5,"id","filterSelect");
+        var el6 = dom.createTextNode("\n                    ");
+        dom.appendChild(el5, el6);
+        var el6 = dom.createElement("option");
+        dom.setAttribute(el6,"value","Select Column");
+        var el7 = dom.createTextNode("Select Column");
+        dom.appendChild(el6, el7);
+        dom.appendChild(el5, el6);
+        var el6 = dom.createTextNode("\n                ");
+        dom.appendChild(el5, el6);
+        dom.appendChild(el4, el5);
+        var el5 = dom.createTextNode("\n\n                ");
+        dom.appendChild(el4, el5);
+        var el5 = dom.createElement("label");
+        var el6 = dom.createTextNode("Min:");
+        dom.appendChild(el5, el6);
+        dom.appendChild(el4, el5);
+        var el5 = dom.createTextNode("\n                ");
+        dom.appendChild(el4, el5);
+        var el5 = dom.createElement("td");
+        var el6 = dom.createElement("input");
+        dom.setAttribute(el6,"type","text");
+        dom.setAttribute(el6,"id","min");
+        dom.setAttribute(el6,"name","min");
+        dom.appendChild(el5, el6);
+        dom.appendChild(el4, el5);
+        var el5 = dom.createTextNode("\n\n                ");
+        dom.appendChild(el4, el5);
+        var el5 = dom.createElement("label");
+        var el6 = dom.createTextNode("Max:");
+        dom.appendChild(el5, el6);
+        dom.appendChild(el4, el5);
+        var el5 = dom.createTextNode("\n                ");
+        dom.appendChild(el4, el5);
+        var el5 = dom.createElement("td");
+        var el6 = dom.createElement("input");
+        dom.setAttribute(el6,"type","text");
+        dom.setAttribute(el6,"id","max");
+        dom.setAttribute(el6,"name","max");
+        dom.appendChild(el5, el6);
+        dom.appendChild(el4, el5);
+        var el5 = dom.createTextNode("\n            ");
+        dom.appendChild(el4, el5);
+        dom.appendChild(el3, el4);
+        var el4 = dom.createTextNode("\n\n            ");
+        dom.appendChild(el3, el4);
+        var el4 = dom.createComment("Filters");
+        dom.appendChild(el3, el4);
+        var el4 = dom.createTextNode("\n\n            ");
         dom.appendChild(el3, el4);
         var el4 = dom.createElement("div");
         dom.setAttribute(el4,"class","panel-footer clearfix");
@@ -1482,7 +1664,7 @@ define('linda-vis-fe/templates/datasource', ['exports'], function (exports) {
         var el4 = dom.createTextNode("\n        ");
         dom.appendChild(el3, el4);
         dom.appendChild(el2, el3);
-        var el3 = dom.createTextNode("     \n    ");
+        var el3 = dom.createTextNode("\n    ");
         dom.appendChild(el2, el3);
         dom.appendChild(el1, el2);
         var el2 = dom.createTextNode("\n");
@@ -1517,7 +1699,7 @@ define('linda-vis-fe/templates/datasource', ['exports'], function (exports) {
         var element2 = dom.childAt(element0, [3]);
         var element3 = dom.childAt(element2, [3]);
         var element4 = dom.childAt(element3, [1, 3]);
-        var element5 = dom.childAt(element3, [5, 1]);
+        var element5 = dom.childAt(element3, [13, 1]);
         var morph0 = dom.createMorphAt(dom.childAt(element1, [3, 3]),1,1);
         var morph1 = dom.createMorphAt(element4,1,1);
         var morph2 = dom.createMorphAt(dom.childAt(element3, [3]),1,1);
@@ -4233,7 +4415,7 @@ define('linda-vis-fe/templates/visualization', ['exports'], function (exports) {
         element(env, element5, context, "bind-attr", [], {"class": "isToggled:col-md-7:col-md-12"});
         element(env, element7, context, "action", ["toggle"], {});
         block(env, morph3, context, "if", [get(env, context, "isToggled")], {}, child0, child1);
-        inline(env, morph4, context, "view", ["draw-visualization"], {"id": "visualization", "visualization": get(env, context, "controller.drawnVisualization"), "configurationArray": get(env, context, "controller.visualizationConfiguration")});
+        inline(env, morph4, context, "view", ["draw-visualization"], {"id": "visualization", "visualization": get(env, context, "controller.drawnVisualization"), "configurationArray": get(env, context, "controller.visualizationConfiguration"), "isToggled": get(env, context, "controller.isToggled")});
         inline(env, morph5, context, "partial", ["export-visualization"], {});
         inline(env, morph6, context, "partial", ["save-visualization"], {});
         inline(env, morph7, context, "view", ["visualization-options"], {"options": get(env, context, "controller.layoutOptions"), "config": get(env, context, "controller.visualizationConfiguration")});
@@ -4269,7 +4451,7 @@ define('linda-vis-fe/tests/components/data-table.jshint', function () {
 
   module('JSHint - components');
   test('components/data-table.js should pass jshint', function() { 
-    ok(true, 'components/data-table.js should pass jshint.'); 
+    ok(false, 'components/data-table.js should pass jshint.\ncomponents/data-table.js: line 37, col 42, Expected \'===\' and instead saw \'==\'.\ncomponents/data-table.js: line 127, col 18, Missing semicolon.\ncomponents/data-table.js: line 80, col 19, \'$\' is not defined.\ncomponents/data-table.js: line 85, col 47, \'$\' is not defined.\ncomponents/data-table.js: line 87, col 47, \'$\' is not defined.\ncomponents/data-table.js: line 114, col 19, \'$\' is not defined.\ncomponents/data-table.js: line 123, col 19, \'$\' is not defined.\ncomponents/data-table.js: line 124, col 19, \'$\' is not defined.\ncomponents/data-table.js: line 81, col 49, \'dataIndex\' is defined but never used.\n\n9 errors'); 
   });
 
 });
@@ -4716,12 +4898,12 @@ define('linda-vis-fe/utils/area-chart', ['exports', 'linda-vis-fe/utils/util', '
         function draw(configuration, visualisationContainerID) {
             console.log("### INITIALIZE VISUALISATION - AREA CHART");
 
-            var container = $("#" + visualisationContainerID);
+            var container = $('#' + visualisationContainerID);
             container.empty();
 
-            var xAxis = configuration["Horizontal Axis"];
-            var yAxis = configuration["Vertical Axis"];
-            var group = configuration["Series"];
+            var xAxis = configuration['Horizontal Axis'];
+            var yAxis = configuration['Vertical Axis'];
+            var group = configuration['Series'];
 
             if (!(configuration.dataModule && configuration.datasourceLocation && xAxis && yAxis && group)) {
                 return $.Deferred().resolve().promise();
@@ -4751,7 +4933,7 @@ define('linda-vis-fe/utils/area-chart', ['exports', 'linda-vis-fe/utils/util', '
             console.log("VISUALISATION SELECTION FOR AREA CHART:");
             console.dir(selection);
 
-            var svg = dimple.newSvg("#" + visualisationContainerID, container.width(), container.height());
+            var svg = dimple.newSvg('#' + visualisationContainerID, container.width(), container.height());
 
             return dataModule.parse(location, graph, selection).then(function (inputData) {
                 var columnsHeaders = inputData[0];
@@ -4794,6 +4976,11 @@ define('linda-vis-fe/utils/area-chart', ['exports', 'linda-vis-fe/utils/util', '
                 }
 
                 chart.draw();
+
+                //prevent overlapping if there are more than 25 ticks
+                if (x.shapes.selectAll("text")[0].length > 25) {
+                    util['default'].cleanAxis(x, 5);
+                }
             });
         }
 
@@ -4831,14 +5018,14 @@ define('linda-vis-fe/utils/bubble-chart', ['exports', 'linda-vis-fe/utils/util',
         function draw(configuration, visualisationContainerID) {
             console.log("### INITIALIZE VISUALISATION - BUBBLE CHART");
 
-            var container = $("#" + visualisationContainerID);
+            var container = $('#' + visualisationContainerID);
             container.empty();
 
-            var xAxis = configuration["Horizontal Axis"];
-            var yAxis = configuration["Vertical Axis"];
-            var size = configuration["Size"];
-            var label = configuration["Label"];
-            var group = configuration["Groups"];
+            var xAxis = configuration['Horizontal Axis'];
+            var yAxis = configuration['Vertical Axis'];
+            var size = configuration['Size'];
+            var label = configuration['Label'];
+            var group = configuration['Groups'];
 
             if (!(configuration.dataModule && configuration.datasourceLocation && xAxis && yAxis && size && label && group)) {
                 return $.Deferred().resolve().promise();
@@ -4868,7 +5055,7 @@ define('linda-vis-fe/utils/bubble-chart', ['exports', 'linda-vis-fe/utils/util',
             console.log("VISUALIZATION SELECTION FOR BUBBLE CHART:");
             console.dir(selection);
 
-            var svg = dimple.newSvg("#" + visualisationContainerID, container.width(), container.height());
+            var svg = dimple.newSvg('#' + visualisationContainerID, container.width(), container.height());
 
             return dataModule.parse(location, graph, selection).then(function (inputData) {
                 console.log("GENERATE INPUT DATA FORMAT FOR BUBBLE CHART - INPUT DATA");
@@ -4980,12 +5167,12 @@ define('linda-vis-fe/utils/column-chart', ['exports', 'linda-vis-fe/utils/util',
         function draw(configuration, visualisationContainerID) {
             console.log("### INITIALIZE VISUALISATION - COLUMN CHART");
 
-            var container = $("#" + visualisationContainerID);
+            var container = $('#' + visualisationContainerID);
             container.empty();
 
-            var xAxis = configuration["Horizontal Axis"];
-            var yAxis = configuration["Vertical Axis"];
-            var group = configuration["Groups"];
+            var xAxis = configuration['Horizontal Axis'];
+            var yAxis = configuration['Vertical Axis'];
+            var group = configuration['Groups'];
 
             if (!(configuration.dataModule && configuration.datasourceLocation && xAxis && yAxis && group)) {
                 return $.Deferred().resolve().promise();
@@ -5015,7 +5202,7 @@ define('linda-vis-fe/utils/column-chart', ['exports', 'linda-vis-fe/utils/util',
             console.log("VISUALIZATION SELECTION FOR COLUMN CHART:");
             console.dir(selection);
 
-            var svg = dimple.newSvg("#" + visualisationContainerID, container.width(), container.height());
+            var svg = dimple.newSvg('#' + visualisationContainerID, container.width(), container.height());
 
             return dataModule.parse(location, graph, selection).then(function (inputData) {
                 seriesHeaders = inputData[0];
@@ -5035,8 +5222,8 @@ define('linda-vis-fe/utils/column-chart', ['exports', 'linda-vis-fe/utils/util',
                     measureAxis = "y";
                 }
 
-                var dim1 = chart.addCategoryAxis(categoryAxis, seriesHeaders.slice(1, 1 + xAxis.length + group.length)); // x axis: more categories       
-                var dim2 = chart.addMeasureAxis(measureAxis, seriesHeaders[0]); // y axis: one measure (scale)                      
+                var dim1 = chart.addCategoryAxis(categoryAxis, seriesHeaders.slice(1, 1 + xAxis.length + group.length)); // x axis: more categories
+                var dim2 = chart.addMeasureAxis(measureAxis, seriesHeaders[0]); // y axis: one measure (scale)
 
                 if (group.length > 0) {
                     // simple column groups
@@ -5064,6 +5251,11 @@ define('linda-vis-fe/utils/column-chart', ['exports', 'linda-vis-fe/utils/util',
                 }
 
                 chart.draw();
+
+                //prevent overlapping if there are more than 25 ticks
+                if (dim1.shapes.selectAll("text")[0].length > 25) {
+                    util['default'].cleanAxis(dim1, 5);
+                }
             });
         }
 
@@ -5135,9 +5327,9 @@ define('linda-vis-fe/utils/csv-data-module', ['exports', 'linda-vis-fe/utils/uti
 
             var dfd = new $.Deferred();
             var dataInfo = {
-                id: 'Columns',
-                label: 'Columns',
-                type: 'Class',
+                id: "Columns",
+                label: "Columns",
+                type: "Class",
                 grandchildren: true
             };
             dfd.resolve([dataInfo]);
@@ -5214,11 +5406,11 @@ define('linda-vis-fe/utils/export-visualization', ['exports'], function (exports
 
         function export_PNG() {
             var svg = get_SVG();
-            var image = $('<img />', { 'id': 'chart', 'style': 'display:none', 'src': 'data:image/svg+xml,' + encodeURIComponent(svg) });
+            var image = $('<img />', { 'id': 'chart', "style": "display:none", 'src': 'data:image/svg+xml,' + encodeURIComponent(svg) });
             image.appendTo($('#visualization'));
             var dfd = new $().Deferred();
 
-            $('#chart').one('load', function () {
+            $("#chart").one("load", function () {
                 var canvas = $('<canvas/>', { 'id': 'canvas' });
                 canvas[0].width = 1050;
                 canvas[0].height = 510;
@@ -5228,7 +5420,7 @@ define('linda-vis-fe/utils/export-visualization', ['exports'], function (exports
                 // Generate a PNG with canvg.
                 context.drawSvg(svg, 0, 0, 1050, 510);
 
-                var pngURL = canvas[0].toDataURL('image/png');
+                var pngURL = canvas[0].toDataURL("image/png");
                 var downloadURL = pngURL.replace(/^data:image\/png/, 'data:application/octet-stream');
 
                 dfd.resolve(downloadURL);
@@ -5254,7 +5446,7 @@ define('linda-vis-fe/utils/export-visualization', ['exports'], function (exports
         }
 
         function get_SVG(cssFilename) {
-            var svg = $('#visualization').find('svg');
+            var svg = $("#visualization").find('svg');
 
             if (svg.length === 0) {
                 return;
@@ -5265,12 +5457,12 @@ define('linda-vis-fe/utils/export-visualization', ['exports'], function (exports
 
             svg.find('defs').remove();
 
-            svg.attr('version', '1.1');
-            svg.attr('xmlns', 'http://www.w3.org/2000/svg');
-            svg.attr('xmlns:xlink', 'http://www.w3.org/1999/xlink');
+            svg.attr('version', "1.1");
+            svg.attr('xmlns', "http://www.w3.org/2000/svg");
+            svg.attr('xmlns:xlink', "http://www.w3.org/1999/xlink");
 
             if (cssFilename) {
-                var css = '';
+                var css = "";
 
                 // Take all the styles from your visualization library and make them inline.
                 $().each(document.styleSheets, function (sheetIndex, sheet) {
@@ -5278,12 +5470,12 @@ define('linda-vis-fe/utils/export-visualization', ['exports'], function (exports
                     if (sheet.href !== null && endsWith(sheet.href, cssFilename)) {
                         $().each(sheet.cssRules || sheet.rules, function (ruleIndex, rule) {
 
-                            css += rule.cssText + '\n';
+                            css += rule.cssText + "\n";
                         });
                     }
                 });
 
-                var style = $('<style />', { 'type': 'text/css' });
+                var style = $('<style />', { "type": "text/css" });
                 style.prependTo(svg);
                 svg_ = svg_.replace('</style>', '<![CDATA[' + css + ']]></style>');
             }
@@ -5314,12 +5506,12 @@ define('linda-vis-fe/utils/line-chart', ['exports', 'linda-vis-fe/utils/util', '
         function draw(configuration, visualisationContainerID) {
             console.log("### INITIALIZE VISUALISATION - LINE CHART");
 
-            var container = $("#" + visualisationContainerID);
+            var container = $('#' + visualisationContainerID);
             container.empty();
 
-            var xAxis = configuration["Horizontal Axis"];
-            var yAxis = configuration["Vertical Axis"];
-            var group = configuration["Series"];
+            var xAxis = configuration['Horizontal Axis'];
+            var yAxis = configuration['Vertical Axis'];
+            var group = configuration['Series'];
 
             if (!(configuration.dataModule && configuration.datasourceLocation && xAxis && yAxis && group)) {
                 return $.Deferred().resolve().promise();
@@ -5349,7 +5541,7 @@ define('linda-vis-fe/utils/line-chart', ['exports', 'linda-vis-fe/utils/util', '
             console.log("VISUALISATION SELECTION FOR LINE CHART:");
             console.dir(selection);
 
-            var svg = dimple.newSvg("#" + visualisationContainerID, container.width(), container.height());
+            var svg = dimple.newSvg('#' + visualisationContainerID, container.width(), container.height());
 
             return dataModule.parse(location, graph, selection).then(function (inputData) {
                 var columnsHeaders = inputData[0];
@@ -5360,7 +5552,7 @@ define('linda-vis-fe/utils/line-chart', ['exports', 'linda-vis-fe/utils/util', '
                 var chart = new dimple.chart(svg, data);
 
                 var x = chart.addCategoryAxis("x", columnsHeaders[1]); // x axis: ordinal values
-                var y = chart.addMeasureAxis("y", columnsHeaders[0]); // y axis: one measure (scale) 
+                var y = chart.addMeasureAxis("y", columnsHeaders[0]); // y axis: one measure (scale)
 
                 var series = null;
 
@@ -5386,12 +5578,18 @@ define('linda-vis-fe/utils/line-chart', ['exports', 'linda-vis-fe/utils/util', '
                 //ticks
                 x.ticks = selection.gridlines;
                 y.ticks = selection.gridlines;
+
                 //tooltip
                 if (selection.tooltip === false) {
                     chart.addSeries(series, dimple.plot.line).addEventHandler("mouseover", function () {});
                 }
 
                 chart.draw();
+
+                //prevent overlapping if there are more than 25 ticks
+                if (x.shapes.selectAll("text")[0].length > 25) {
+                    util['default'].cleanAxis(x, 5);
+                }
             });
         }
 
@@ -5427,7 +5625,7 @@ define('linda-vis-fe/utils/map', ['exports', 'linda-vis-fe/utils/util'], functio
         var map = null;
         function draw(configuration, visualisationContainer) {
             if (L && !L.Icon.Default.imagePath) {
-                L.Icon.Default.imagePath = "leaflet/images";
+                L.Icon.Default.imagePath = 'leaflet/images';
             }
             console.log("### INITIALIZE VISUALISATION - MAP");
             if (map) {
@@ -5435,11 +5633,11 @@ define('linda-vis-fe/utils/map', ['exports', 'linda-vis-fe/utils/util'], functio
                 map = null;
             }
 
-            $("#" + visualisationContainer).empty();
-            var label = configuration["Label"];
-            var lat = configuration["Latitude"];
-            var long = configuration["Longitude"];
-            var indicator = configuration["Indicator"];
+            $('#' + visualisationContainer).empty();
+            var label = configuration['Label'];
+            var lat = configuration['Latitude'];
+            var long = configuration['Longitude'];
+            var indicator = configuration['Indicator'];
             if (!(configuration.dataModule && configuration.datasourceLocation && label && lat && long && indicator)) {
                 return $.Deferred().resolve().promise();
             }
@@ -5449,8 +5647,8 @@ define('linda-vis-fe/utils/map', ['exports', 'linda-vis-fe/utils/util'], functio
             }
 
             map = new L.Map(visualisationContainer);
-            L.tileLayer("http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-                attribution: "&copy; <a href=\"http://openstreetmap.org\">OpenStreetMap</a> contributors, <a href=\"http://creativecommons.org/licenses/by-sa/2.0/\">CC-BY-SA</a>",
+            L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>',
                 zoom: 8
             }).addTo(map);
             var dataModule = configuration.dataModule;
@@ -5525,7 +5723,7 @@ define('linda-vis-fe/utils/map', ['exports', 'linda-vis-fe/utils/util'], functio
                 for (var k = 1; k < data.length; ++k) {
                     var row_ = data[k];
                     var lat = parseFloat(row_[latColumn]);
-                    var long = parseFloat(0 + row_[longColumn]);
+                    var long = parseFloat(0.0 + row_[longColumn]);
                     if (!lat || !long) {
                         console.warn("No lat or long in row:");
                         console.dir(row_);
@@ -5542,7 +5740,7 @@ define('linda-vis-fe/utils/map', ['exports', 'linda-vis-fe/utils/util'], functio
 
                     var columnsHeaders = data[0];
                     var dataLayerOptions = {
-                        recordsField: "features",
+                        recordsField: 'features',
                         latitudeField: columnsHeaders[0],
                         longitudeField: columnsHeaders[1],
                         locationMode: L.LocationModes.LATLNG,
@@ -5551,7 +5749,7 @@ define('linda-vis-fe/utils/map', ['exports', 'linda-vis-fe/utils/util'], functio
                             numberOfSides: 4,
                             radius: 10,
                             weight: 1,
-                            color: "#000",
+                            color: '#000',
                             opacity: 0.2,
                             stroke: true,
                             fillOpacity: 0.7,
@@ -5564,7 +5762,7 @@ define('linda-vis-fe/utils/map', ['exports', 'linda-vis-fe/utils/util'], functio
                         },
                         onEachRecord: function onEachRecord(layer, record) {
                             var $html = $(L.HTMLUtils.buildTable(record));
-                            layer.bindPopup($html.wrap("<div/>").parent().html(), {
+                            layer.bindPopup($html.wrap('<div/>').parent().html(), {
                                 minWidth: 400,
                                 maxWidth: 400
                             });
@@ -5575,8 +5773,8 @@ define('linda-vis-fe/utils/map', ['exports', 'linda-vis-fe/utils/util'], functio
                     var maxIValue = maxIndicatorValues[0];
                     console.log("Min/max indicator value: " + minIValue + " -> " + maxIValue);
 
-                    var indicatorColorFunction = new L.HSLHueFunction(new L.Point(minIValue, 50), new L.Point(maxIValue, -25), { outputSaturation: "100%", outputLuminosity: "25%" });
-                    var indicatorFillColorFunction = new L.HSLHueFunction(new L.Point(minIValue, 50), new L.Point(maxIValue, -25), { outputSaturation: "100%", outputLuminosity: "50%" });
+                    var indicatorColorFunction = new L.HSLHueFunction(new L.Point(minIValue, 50), new L.Point(maxIValue, -25), { outputSaturation: '100%', outputLuminosity: '25%' });
+                    var indicatorFillColorFunction = new L.HSLHueFunction(new L.Point(minIValue, 50), new L.Point(maxIValue, -25), { outputSaturation: '100%', outputLuminosity: '50%' });
 
                     var columnName = columnsHeaders[iColumn];
                     dataLayerOptions.displayOptions[columnName] = {
@@ -5587,7 +5785,8 @@ define('linda-vis-fe/utils/map', ['exports', 'linda-vis-fe/utils/util'], functio
                     };
 
                     var inputData = {
-                        features: util['default'].createRows(data) };
+                        features: util['default'].createRows(data)
+                    };
                     var dataLayer = new L.DataLayer(inputData, dataLayerOptions);
                     console.log("Map input data: ");
                     console.dir(inputData);
@@ -5596,13 +5795,13 @@ define('linda-vis-fe/utils/map', ['exports', 'linda-vis-fe/utils/util'], functio
                     for (var l = 1; l < data.length; ++l) {
                         var row__ = data[l];
                         var lat_ = parseFloat(row__[latColumn]);
-                        var long_ = parseFloat(0 + row__[longColumn]);
+                        var long_ = parseFloat(0.0 + row__[longColumn]);
                         if (!lat_ || !long_) {
                             console.warn("No lat or long in row:");
                             console.dir(row__);
                             continue;
                         }
-                        var label = labelColumns.length >= 0 ? row__[labelColumns[0]] : "";
+                        var label = labelColumns.length >= 0 ? row__[labelColumns[0]] : '';
                         console.log("LatLong: " + lat_ + ", " + long_);
                         var marker;
                         if (indicatorColumns.length > 0) {
@@ -5611,17 +5810,17 @@ define('linda-vis-fe/utils/map', ['exports', 'linda-vis-fe/utils/util'], functio
                                 chartOptions: {},
                                 displayOptions: {},
                                 weight: 1,
-                                color: "#000000"
+                                color: '#000000'
                             };
                             for (var t = 0; t < indicatorColumns.length; t++) {
                                 var iColumn_ = indicatorColumns[t]; // spaltenindex
                                 var iValue = row__[iColumn_];
-                                var name = "datapoint" + t;
+                                var name = 'datapoint' + t;
                                 console.log("indicator [t]: " + iColumn_ + " name: " + name + " value: " + iValue);
                                 markeroptions.data[name] = iValue;
                                 markeroptions.chartOptions[name] = {
-                                    color: "hsl(240,100%,55%)",
-                                    fillColor: "hsl(240,80%,55%)",
+                                    color: 'hsl(240,100%,55%)',
+                                    fillColor: 'hsl(240,80%,55%)',
                                     minValue: 0,
                                     maxValue: maxIndicatorValues[j],
                                     maxHeight: 20,
@@ -5631,8 +5830,8 @@ define('linda-vis-fe/utils/map', ['exports', 'linda-vis-fe/utils/util'], functio
                                     }
                                 };
                                 markeroptions.displayOptions[name] = {
-                                    color: new L.HSLHueFunction(new L.Point(0, minHue), new L.Point(100, maxHue), { outputSaturation: "100%", outputLuminosity: "25%" }),
-                                    fillColor: new L.HSLHueFunction(new L.Point(0, minHue), new L.Point(100, maxHue), { outputSaturation: "100%", outputLuminosity: "50%" })
+                                    color: new L.HSLHueFunction(new L.Point(0, minHue), new L.Point(100, maxHue), { outputSaturation: '100%', outputLuminosity: '25%' }),
+                                    fillColor: new L.HSLHueFunction(new L.Point(0, minHue), new L.Point(100, maxHue), { outputSaturation: '100%', outputLuminosity: '50%' })
                                 };
                             }
                             console.dir(markeroptions);
@@ -5655,14 +5854,14 @@ define('linda-vis-fe/utils/map', ['exports', 'linda-vis-fe/utils/util'], functio
         }
 
         function get_SVG() {
-            return "";
+            return '';
         }
 
         function export_as_PNG() {
             var dfd = new $.Deferred();
             leafletImage(map, function (err, canvas) {
                 var pngURL = canvas.toDataURL();
-                var downloadURL = pngURL.replace(/^data:image\/png/, "data:application/octet-stream");
+                var downloadURL = pngURL.replace(/^data:image\/png/, 'data:application/octet-stream');
                 dfd.resolve(downloadURL);
             });
             return dfd.promise();
@@ -5690,11 +5889,11 @@ define('linda-vis-fe/utils/pie-chart', ['exports', 'linda-vis-fe/utils/util', 'l
         function draw(configuration, visualisationContainerID) {
             console.log("### INITIALIZE VISUALISATION - PIE CHART");
 
-            var container = $("#" + visualisationContainerID);
+            var container = $('#' + visualisationContainerID);
             container.empty();
 
-            var measure = configuration["Measure"];
-            var slice = configuration["Slices"];
+            var measure = configuration['Measure'];
+            var slice = configuration['Slices'];
 
             if (!(configuration.dataModule && configuration.datasourceLocation && measure && slice)) {
                 return $.Deferred().resolve().promise();
@@ -5717,7 +5916,7 @@ define('linda-vis-fe/utils/pie-chart', ['exports', 'linda-vis-fe/utils/util', 'l
             console.log("VISUALIZATION SELECTION FOR PIE CHART:");
             console.dir(selection);
 
-            var svg = dimple.newSvg("#" + visualisationContainerID, container.width(), container.height());
+            var svg = dimple.newSvg('#' + visualisationContainerID, container.width(), container.height());
 
             return dataModule.parse(location, graph, selection).then(function (inputData) {
                 seriesHeaders = inputData[0];
@@ -5731,7 +5930,7 @@ define('linda-vis-fe/utils/pie-chart', ['exports', 'linda-vis-fe/utils/util', 'l
                 chart.addLegend("10%", "5%", "80%", 20, "right");
 
                 //tooltip
-                if (configuration["Tooltip"] === false) {
+                if (configuration['Tooltip'] === false) {
                     chart.addSeries(series, dimple.plot.pie).addEventHandler("mouseover", function () {});
                 }
 
@@ -5773,12 +5972,12 @@ define('linda-vis-fe/utils/scatter-chart', ['exports', 'linda-vis-fe/utils/util'
         function draw(configuration, visualisationContainerID) {
             console.log("### INITIALIZE VISUALISATION - COLUMN CHART");
 
-            var container = $("#" + visualisationContainerID);
+            var container = $('#' + visualisationContainerID);
             container.empty();
 
-            var xAxis = configuration["Horizontal Axis"];
-            var yAxis = configuration["Vertical Axis"];
-            var group = configuration["Groups"];
+            var xAxis = configuration['Horizontal Axis'];
+            var yAxis = configuration['Vertical Axis'];
+            var group = configuration['Groups'];
 
             if (!(configuration.dataModule && configuration.datasourceLocation && xAxis && yAxis)) {
                 return $.Deferred().resolve().promise();
@@ -5808,7 +6007,7 @@ define('linda-vis-fe/utils/scatter-chart', ['exports', 'linda-vis-fe/utils/util'
             console.log("VISUALIZATION SELECTION FOR COLUMN CHART:");
             console.dir(selection);
 
-            var svg = dimple.newSvg("#" + visualisationContainerID, container.width(), container.height());
+            var svg = dimple.newSvg('#' + visualisationContainerID, container.width(), container.height());
 
             return dataModule.parse(location, graph, selection).then(function (inputData) {
                 console.log("GENERATE INPUT DATA FORMAT FOR COLUMN CHART - INPUT DATA");
@@ -5898,7 +6097,7 @@ define('linda-vis-fe/utils/sparql-data-module', ['exports', 'ember', 'linda-vis-
     var sparql_data_module = (function () {
 
         function sparqlProxyQuery(endpoint, query) {
-            var promise = Ember['default'].$.getJSON("http://" + window.location.hostname + ":3002/sparql-proxy/" + encodeURIComponent(endpoint) + "/" + encodeURIComponent(query));
+            var promise = Ember['default'].$.getJSON('http://' + window.location.hostname + ':3002/sparql-proxy/' + encodeURIComponent(endpoint) + "/" + encodeURIComponent(query));
             return promise.then(function (result) {
                 console.log("SPARQL DATA MODULE - SPARQL QUERY RESULT");
                 console.dir(result);
@@ -5914,27 +6113,27 @@ define('linda-vis-fe/utils/sparql-data-module', ['exports', 'ember', 'linda-vis-
         function queryClasses(endpoint, graph) {
             var query = "";
 
-            query += "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>";
-            query += "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>";
+            query += 'PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>';
+            query += 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>';
 
-            query += "SELECT DISTINCT ?class ?classLabel ";
-            query += "WHERE ";
-            query += "{";
-            query += " GRAPH <" + graph + ">";
-            query += " {";
-            query += "  SELECT ?class ?classLabel COUNT(?x) as ?classSize";
-            query += "  WHERE";
-            query += "  {";
-            query += "   ?x rdf:type ?class .";
-            query += "   ?x ?property ?y .";
-            query += "   OPTIONAL";
-            query += "   {";
-            query += "    ?class rdfs:label ?classLabel .";
-            query += "   }";
-            query += "  }";
-            query += " }";
-            query += "}";
-            query += "ORDER BY DESC(?classSize)";
+            query += 'SELECT DISTINCT ?class ?classLabel ';
+            query += 'WHERE ';
+            query += '{';
+            query += ' GRAPH <' + graph + '>';
+            query += ' {';
+            query += '  SELECT ?class ?classLabel COUNT(?x) as ?classSize';
+            query += '  WHERE';
+            query += '  {';
+            query += '   ?x rdf:type ?class .';
+            query += '   ?x ?property ?y .';
+            query += '   OPTIONAL';
+            query += '   {';
+            query += '    ?class rdfs:label ?classLabel .';
+            query += '   }';
+            query += '  }';
+            query += ' }';
+            query += '}';
+            query += 'ORDER BY DESC(?classSize)';
 
             console.log("SPARQL DATA MODULE - CLASSES QUERY");
             console.dir(query);
@@ -5964,6 +6163,8 @@ define('linda-vis-fe/utils/sparql-data-module', ['exports', 'ember', 'linda-vis-
 
         function predictRDFPropertyRole(propertyURI, propertyTypes) {
             switch (propertyURI) {}
+
+            // TODO: Are there properties that always have the role of a domain or a range?
             for (var i = 0; i < propertyTypes.length; i++) {
                 var propertyType = propertyTypes[i];
                 switch (propertyType) {
@@ -5980,39 +6181,39 @@ define('linda-vis-fe/utils/sparql-data-module', ['exports', 'ember', 'linda-vis-
         function queryProperties(endpoint, graph, _class, _properties) {
             var query = "";
 
-            query += "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n";
-            query += "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\n";
+            query += 'PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n';
+            query += 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\n';
 
-            query += "SELECT DISTINCT ?property ";
-            query += " SAMPLE(?propertyLabel_) as ?propertyLabel ";
-            query += " GROUP_CONCAT(STR(?propertyType) ; separator=\" \") as ?propertyTypes ";
-            query += " SAMPLE(?propertyValue) as ?sampleValue ";
-            query += " COUNT(?grandchildProperty) as ?numChildren\n";
-            query += "WHERE\n";
-            query += "{\n";
-            query += " GRAPH <" + graph + ">\n";
-            query += " {\n";
-            query += "  ?x0 rdf:type <" + _class.id + "> .\n";
+            query += 'SELECT DISTINCT ?property ';
+            query += ' SAMPLE(?propertyLabel_) as ?propertyLabel ';
+            query += ' GROUP_CONCAT(STR(?propertyType) ; separator=" ") as ?propertyTypes ';
+            query += ' SAMPLE(?propertyValue) as ?sampleValue ';
+            query += ' COUNT(?grandchildProperty) as ?numChildren\n';
+            query += 'WHERE\n';
+            query += '{\n';
+            query += ' GRAPH <' + graph + '>\n';
+            query += ' {\n';
+            query += '  ?x0 rdf:type <' + _class.id + '> .\n';
 
             for (var i = 0; i < _properties.length; i++) {
-                query += "  ?x" + i + " <" + _properties[i].id + "> ?x" + (i + 1) + " .\n";
+                query += '  ?x' + i + ' <' + _properties[i].id + '> ?x' + (i + 1) + ' .\n';
             }
 
-            query += "  ?x" + _properties.length + " ?property ?propertyValue .\n";
-            query += "  OPTIONAL\n";
-            query += "  {\n";
-            query += "   ?property rdfs:label ?propertyLabel_ .\n";
-            query += "  }\n";
-            query += "  OPTIONAL\n";
-            query += "  {\n";
-            query += "   ?property rdf:type ?propertyType .\n"; // For predicting roles, e.g. DimensionProperty
-            query += "  }\n";
-            query += "  OPTIONAL\n";
-            query += "  {\n";
-            query += "   ?propertyValue ?grandchildProperty ?grandchildValue.\n";
-            query += "  }\n";
-            query += " }\n";
-            query += "} GROUP BY ?property";
+            query += '  ?x' + _properties.length + ' ?property ?propertyValue .\n';
+            query += '  OPTIONAL\n';
+            query += '  {\n';
+            query += '   ?property rdfs:label ?propertyLabel_ .\n';
+            query += '  }\n';
+            query += '  OPTIONAL\n';
+            query += '  {\n';
+            query += '   ?property rdf:type ?propertyType .\n'; // For predicting roles, e.g. DimensionProperty
+            query += '  }\n';
+            query += '  OPTIONAL\n';
+            query += '  {\n';
+            query += '   ?propertyValue ?grandchildProperty ?grandchildValue.\n';
+            query += '  }\n';
+            query += ' }\n';
+            query += '} GROUP BY ?property';
 
             console.log("SPARQL DATA MODULE - PROPERTIES QUERY: ");
             console.dir(query);
@@ -6027,7 +6228,7 @@ define('linda-vis-fe/utils/sparql-data-module', ['exports', 'ember', 'linda-vis-
                     var propertyTypesString = (result.propertyTypes || {}).value;
                     var propertyTypes;
                     if (propertyTypesString) {
-                        propertyTypes = propertyTypesString.split(" ");
+                        propertyTypes = propertyTypesString.split(' ');
                     } else {
                         propertyTypes = [];
                     }
@@ -6153,25 +6354,25 @@ define('linda-vis-fe/utils/sparql-data-module', ['exports', 'ember', 'linda-vis-
                 columnHeaders.push(header);
                 selectedVariablesArray.push("z" + i);
 
-                optionals += " OPTIONAL ";
-                optionals += " { ";
+                optionals += ' OPTIONAL ';
+                optionals += ' { ';
                 for (var j = 1; j < path.length; j++) {
                     var x = simplifyURI(path[j - 1].id) + (j - 1);
                     if (j < path.length - 1) {
                         var variable_t = simplifyURI(path[j].id) + j;
-                        optionals += "\n" + "?" + x + " <" + path[j].id + "> ?" + variable_t + ".\n";
+                        optionals += '\n' + '?' + x + ' <' + path[j].id + '> ?' + variable_t + '.\n';
                     } else {
-                        optionals += "\n" + "?" + x + " <" + path[j].id + "> ?z" + i + ".\n";
+                        optionals += '\n' + '?' + x + ' <' + path[j].id + '> ?z' + i + '.\n';
                     }
                 }
-                optionals += " } ";
+                optionals += ' } ';
             }
 
-            var y = simplifyURI(path[0].id) + "0";
+            var y = simplifyURI(path[0].id) + '0';
 
-            var query = "\n" + "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" + "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\n" + "SELECT DISTINCT " + selectVariables + "\n" + "WHERE {\n" + "GRAPH <" + graph + "> {\n" + "?" + y + " rdf:type <" + class_ + ">.\n" + optionals + "\n" + "}\n" + "}";
+            var query = '\n' + 'PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n' + 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\n' + 'SELECT DISTINCT ' + selectVariables + '\n' + 'WHERE {\n' + 'GRAPH <' + graph + '> {\n' + '?' + y + ' rdf:type <' + class_ + '>.\n' + optionals + '\n' + '}\n' + '}';
 
-            console.log("SPARQL DATA MODULE - DATA QUERY FOR VISUALIZATION CONFIGURATION");
+            console.log('SPARQL DATA MODULE - DATA QUERY FOR VISUALIZATION CONFIGURATION');
             console.dir(query);
 
             return sparqlProxyQuery(endpoint, query).then(function (queryResult) {
@@ -6218,7 +6419,7 @@ define('linda-vis-fe/utils/sparql-data-module', ['exports', 'ember', 'linda-vis-
                     var datatype = binding.datatype;
                     if (datatype) {
                         var parsedValue = typedLiteralToScalar(value, datatype);
-                        if (typeof parsedValue !== "undefined") {
+                        if (typeof parsedValue !== 'undefined') {
                             return parsedValue;
                         }
                     }
@@ -6263,7 +6464,7 @@ define('linda-vis-fe/utils/sparql-data-module', ['exports', 'ember', 'linda-vis-
                         // No idea what this is, maybe JavaScript knows...
                         yearDateString = value;
                     }
-                    return new Date(yearDateString);
+                    return new Date(yearDateString).getFullYear();
                 case "http://www.w3.org/2001/XMLSchema#gYearMonth":
                     var twoNumbersWithHyphenRegex = /\d+-\d+/;
                     var firstTwoNumbers = twoNumbersWithHyphenRegex.exec(value);
@@ -6273,7 +6474,9 @@ define('linda-vis-fe/utils/sparql-data-module', ['exports', 'ember', 'linda-vis-
                     } else {
                         yearMonthDateString = value;
                     }
-                    return new Date(yearMonthDateString);
+                    //prevent long strings
+                    yearMonthDateString = Date(yearMonthDateString);
+                    return yearMonthDateString.getFullYear() + "-" + (yearMonthDateString.getMonth() + 1);
                 case "http://www.w3.org/2001/XMLSchema#dateTime":
                 case "http://www.w3.org/2001/XMLSchema#date":
                     return new Date(value);
@@ -6297,8 +6500,6 @@ define('linda-vis-fe/utils/sparql-data-module', ['exports', 'ember', 'linda-vis-
 
     exports['default'] = sparql_data_module;
 
-    // TODO: Are there properties that always have the role of a domain or a range?
-
 });
 define('linda-vis-fe/utils/table-data-module', ['exports', 'linda-vis-fe/utils/csv-data-module', 'linda-vis-fe/utils/sparql-data-module'], function (exports, csv_data_module, sparql_data_module) {
 
@@ -6312,7 +6513,7 @@ define('linda-vis-fe/utils/table-data-module', ['exports', 'linda-vis-fe/utils/c
             var _format = datasource.format;
             var data_module = getDataModule(_format);
 
-            console.log("TABLE DATA MODULE - SELECTION:");
+            console.log('TABLE DATA MODULE - SELECTION:');
             console.dir(selection);
 
             return data_module.queryInstances(_location, _graph, selection);
@@ -6329,9 +6530,9 @@ define('linda-vis-fe/utils/table-data-module', ['exports', 'linda-vis-fe/utils/c
         }
         function getDataModule(format) {
             switch (format) {
-                case "csv":
+                case 'csv':
                     return csv_data_module['default'];
-                case "rdf":
+                case 'rdf':
                     return sparql_data_module['default'];
             }
             console.error("Unknown data format '" + format + "'");
@@ -6357,7 +6558,7 @@ define('linda-vis-fe/utils/template-mapping', ['exports'], function (exports) {
         function templateMapping(editObject) {
             //the input object might be the result of the recommendation algorithm
             //or the JSON with changed template data, i.e. {layoutOptions:{height:500}}
-            console.log("CREATING TEMPLATE MAPPING ...");
+            console.log('CREATING TEMPLATE MAPPING ...');
 
             var resultMapping = {
                 layoutOptions: {},
@@ -6431,7 +6632,7 @@ define('linda-vis-fe/utils/tree-selection-data-module', ['exports', 'linda-vis-f
         var _data_module = "";
 
         function initialize(dataInfo) {
-            console.log("SELECTION TREE COMPONENT - INITIALIZING TREE");
+            console.log('SELECTION TREE COMPONENT - INITIALIZING TREE');
 
             _location = dataInfo.location;
             _graph = dataInfo.graph;
@@ -6444,7 +6645,7 @@ define('linda-vis-fe/utils/tree-selection-data-module', ['exports', 'linda-vis-f
         }
 
         function restore(dataInfo, previousSelection) {
-            console.log("SELECTION TREE COMPONENT - RESTORING TREE");
+            console.log('SELECTION TREE COMPONENT - RESTORING TREE');
 
             _location = dataInfo.location;
             _graph = dataInfo.graph;
@@ -6462,11 +6663,11 @@ define('linda-vis-fe/utils/tree-selection-data-module', ['exports', 'linda-vis-f
                     }
                 });
 
-                branch[0]["expanded"] = true;
-                branch[0]["selected"] = true;
-                branch[0]["lazy"] = false;
-                branch[0]["children"] = [];
-                branch[0]["parent"] = [{ id: _selectedClassKey, label: _selectedClassTitle }];
+                branch[0]['expanded'] = true;
+                branch[0]['selected'] = true;
+                branch[0]['lazy'] = false;
+                branch[0]['children'] = [];
+                branch[0]['parent'] = [{ id: _selectedClassKey, label: _selectedClassTitle }];
 
                 return restoreTreeContent(previousSelection, branch[0]).then(function () {
                     return treecontent;
@@ -6475,45 +6676,45 @@ define('linda-vis-fe/utils/tree-selection-data-module', ['exports', 'linda-vis-f
         }
 
         function restoreTreeContent(previousSelection, branch) {
-            console.log("SELECTION TREE COMPONENT - RESTORING TREE CONTENT");
+            console.log('SELECTION TREE COMPONENT - RESTORING TREE CONTENT');
 
             return branch._children.loadChildren(branch.parent).then(function (children) {
                 var promises = [];
 
                 for (var j = 0; j < children.length; j++) {
                     var child = children[j];
-                    child["parent"] = branch.parent.concat([{ id: child.key, label: child.title }]);
+                    child['parent'] = branch.parent.concat([{ id: child.key, label: child.title }]);
 
                     for (var i = 0; i < previousSelection.length; i++) {
                         var selection = previousSelection[i];
                         var prefix = selection.parent.slice(0, child.parent.length);
 
                         if (_.isEqual(child.parent, prefix) && selection.parent.length > child.parent.length) {
-                            child["expanded"] = true;
-                            child["selected"] = true;
-                            child["lazy"] = false;
-                            child["children"] = [];
+                            child['expanded'] = true;
+                            child['selected'] = true;
+                            child['lazy'] = false;
+                            child['children'] = [];
                             promises.push(restoreTreeContent(previousSelection, child));
                             break;
                         } else if (_.isEqual(child.parent, prefix)) {
-                            child["selected"] = true;
-                            child["lazy"] = true;
+                            child['selected'] = true;
+                            child['lazy'] = true;
                             if (!child.grandchildren) {
-                                child["lazy"] = false;
+                                child['lazy'] = false;
                             }
                         }
                     }
                     branch.children.push(child);
                 }
                 return $.when.apply($, promises).then(function (content) {
-                    console.log("SELECTION TREE COMPONENT - FINISHED RESTORING TREE CONTENT");
+                    console.log('SELECTION TREE COMPONENT - FINISHED RESTORING TREE CONTENT');
                     return content;
                 });
             });
         }
 
         function createTreeContent(data) {
-            console.log("SELECTION TREE COMPONENT - CREATING TREE CONTENT");
+            console.log('SELECTION TREE COMPONENT - CREATING TREE CONTENT');
             var treeContent = [];
 
             for (var i = 0; i < data.length; i++) {
@@ -6564,7 +6765,7 @@ define('linda-vis-fe/utils/tree-selection-data-module', ['exports', 'linda-vis-f
 
             for (var i = 0; i < selection.length; i++) {
                 var record = selection[i];
-                dataSelection["propertyInfos"].push({
+                dataSelection['propertyInfos'].push({
                     key: record.key,
                     label: record.label,
                     parent: record.parent,
@@ -6581,19 +6782,19 @@ define('linda-vis-fe/utils/tree-selection-data-module', ['exports', 'linda-vis-f
         function getCSSClass(record) {
             switch (record) {
                 case "Ratio":
-                    return "treenode-number-label";
+                    return 'treenode-number-label';
                 case "Interval":
-                    return "treenode-date-label";
+                    return 'treenode-date-label';
                 case "Nominal":
-                    return "treenode-text-label";
+                    return 'treenode-text-label';
                 case "Geographic Latitude":
                 case "Geographic Longitude":
-                    return "treenode-spatial-label";
+                    return 'treenode-spatial-label';
                 case "Class":
-                    return "treenode-class-label";
+                    return 'treenode-class-label';
                 case "Resource":
                 case "Nothing":
-                    return "treenode-resource-label";
+                    return 'treenode-resource-label';
             }
             console.error("Unknown type of record  '" + record + "'");
             return null;
@@ -6602,18 +6803,18 @@ define('linda-vis-fe/utils/tree-selection-data-module', ['exports', 'linda-vis-f
         function getDataType(record) {
             switch (record) {
                 case "Ratio":
-                    return "Number";
+                    return 'Number';
                 case "Interval":
-                    return "Date";
+                    return 'Date';
                 case "Ordinal":
-                    return "Ordinal";
+                    return 'Ordinal';
                 case "Nominal":
-                    return "String";
+                    return 'String';
                 case "Angular":
-                    return "Angle";
+                    return 'Angle';
                 case "Geographic Latitude":
                 case "Geographic Longitude":
-                    return "Spatial";
+                    return 'Spatial';
                 case "Class":
                 case "Resource":
                 case "Nothing":
@@ -6643,9 +6844,9 @@ define('linda-vis-fe/utils/tree-selection-data-module', ['exports', 'linda-vis-f
 
         function getDataModule(format) {
             switch (format) {
-                case "csv":
+                case 'csv':
                     return csv_data_module['default'];
-                case "rdf":
+                case 'rdf':
                     return sparql_data_module['default'];
             }
             console.error("Unknown data format '" + format + "'");
@@ -6733,9 +6934,9 @@ define('linda-vis-fe/utils/util', ['exports'], function (exports) {
                 case "object":
                     var asString = Object.prototype.toString.call(value);
                     switch (asString) {
-                        case "[object Date]":
-                        case "[invalid Date]":
-                            return "Interval";
+                        case '[object Date]':
+                        case '[invalid Date]':
+                            return 'Interval';
                     }
                     break;
             }
@@ -6743,11 +6944,34 @@ define('linda-vis-fe/utils/util', ['exports'], function (exports) {
             return "Nominal";
         }
 
+        var cleanAxis = function cleanAxis(axis, interval) {
+            if (axis.shapes.length > 0) {
+                //first tick
+                var del = 0;
+                if (interval > 1) {
+                    axis.shapes.selectAll("text").each(function (d) {
+                        //remove all but nth label
+                        if (del % interval !== 0) {
+                            this.remove();
+                            //delete a corresponding tick
+                            axis.shapes.selectAll("line").each(function (d2) {
+                                if (d === d2) {
+                                    this.remove();
+                                }
+                            });
+                        }
+                        del += 1;
+                    });
+                }
+            }
+        };
+
         return {
             predictValueSOM: predictValueSOM,
             toScalar: toScalar,
             transpose: transpose,
-            createRows: createRows
+            createRows: createRows,
+            cleanAxis: cleanAxis
         };
     })();
 
@@ -6761,19 +6985,19 @@ define('linda-vis-fe/utils/visualization-registry', ['exports', 'linda-vis-fe/ut
     var visualizationRegistry = {
         getVisualization: function getVisualization(widgetName) {
             switch (widgetName) {
-                case "BarChart":
+                case 'BarChart':
                     return columnchart['default'];
-                case "LineChart":
+                case 'LineChart':
                     return linechart['default'];
-                case "AreaChart":
+                case 'AreaChart':
                     return areachart['default'];
-                case "PieChart":
+                case 'PieChart':
                     return piechart['default'];
-                case "BubbleChart":
+                case 'BubbleChart':
                     return bubblechart['default'];
-                case "ScatterChart":
+                case 'ScatterChart':
                     return scatterchart['default'];
-                case "Map":
+                case 'Map':
                     return map['default'];
             }
             return null;
@@ -6810,7 +7034,7 @@ define('linda-vis-fe/views/draw-visualization', ['exports', 'ember', 'linda-vis-
             }
         }),
         drawVisualization: (function () {
-            var visualization = this.get("visualization");
+            var visualization = this.get('visualization');
             console.log("DRAW VISUALIZATION VIEW - DRAW ...");
             console.dir(visualization);
 
@@ -6818,7 +7042,7 @@ define('linda-vis-fe/views/draw-visualization', ['exports', 'ember', 'linda-vis-
                 return;
             }
 
-            var config = this.get("configurationArray")[0];
+            var config = this.get('configurationArray')[0];
 
             console.log("VISUALIZATION CONFIGURATION");
             console.dir(JSON.stringify(config));
@@ -6827,17 +7051,17 @@ define('linda-vis-fe/views/draw-visualization', ['exports', 'ember', 'linda-vis-
                 return;
             }
 
-            var dataselection = visualization.get("dataselection");
-            var datasource = dataselection.get("datasource");
+            var dataselection = visualization.get('dataselection');
+            var datasource = dataselection.get('datasource');
             var format = datasource.format;
             config.datasourceLocation = datasource.location;
             config.datasourceGraph = datasource.graph;
 
             switch (format) {
-                case "rdf":
+                case 'rdf':
                     config.dataModule = sparql_data_module['default'];
                     break;
-                case "csv":
+                case 'csv':
                     config.dataModule = csv_data_module['default'];
                     break;
                 default:
@@ -6849,7 +7073,7 @@ define('linda-vis-fe/views/draw-visualization', ['exports', 'ember', 'linda-vis-
             var visualization_ = vis_registry['default'].getVisualization(name);
             var self = this;
 
-            var element = this.get("element");
+            var element = this.get('element');
             if (!element) {
                 return;
             }
@@ -6857,17 +7081,27 @@ define('linda-vis-fe/views/draw-visualization', ['exports', 'ember', 'linda-vis-
             try {
                 visualization_.draw(config, element.id).then(function () {
                     var svg = visualization_.get_SVG();
-                    self.set("visualizationSVG", svg);
+                    self.set('visualizationSVG', svg);
                 });
             } catch (ex) {
                 console.error("Error drawing visualization: ");
                 console.log(ex);
             }
-        }).observes("configurationArray.@each").on("didInsertElement"),
-        redraw: (function () {}).observes("visualization")
-    });
+        }).observes('configurationArray.@each').on('didInsertElement'),
+        redraw: (function () {
+            //this.rerender();
+        }).observes('visualization'),
+        resize: (function () {
+            //get the controller
+            var self = this;
 
-    //this.rerender();
+            //run asynchronous code to ensure that DOM has been changed before rerendering
+            //time window = 500 ms
+            Ember['default'].run.later(function () {
+                self.rerender();
+            }, 500);
+        }).observes('isToggled')
+    });
 
 });
 define('linda-vis-fe/views/properties-list', ['exports', 'ember'], function (exports, Ember) {
@@ -6876,8 +7110,8 @@ define('linda-vis-fe/views/properties-list', ['exports', 'ember'], function (exp
 
     exports['default'] = Ember['default'].View.extend({
         templateName: "properties-list",
-        tagName: "ul",
-        classNames: ["properties-list"]
+        tagName: 'ul',
+        classNames: ['properties-list']
     });
 
 });
@@ -6892,7 +7126,7 @@ define('linda-vis-fe/views/slide-show', ['exports', 'ember'], function (exports,
         didInsertElement: function didInsertElement() {
             this._super();
 
-            console.log('Inserted slideshow: ');
+            console.log("Inserted slideshow: ");
             console.dir(this.get('slides'));
 
             this.$().slick({
@@ -6918,8 +7152,8 @@ define('linda-vis-fe/views/visualization-options', ['exports', 'ember'], functio
         children: (function () {
             this.clear();
 
-            var options = this.get("options");
-            var configArray = this.get("config");
+            var options = this.get('options');
+            var configArray = this.get('config');
 
             if (configArray === null || options === null) {
                 return;
@@ -6946,25 +7180,25 @@ define('linda-vis-fe/views/visualization-options', ['exports', 'ember'], functio
                         metadata: optionTemplate.metadata ? optionTemplate.metadata.types : "",
                         maxCardinality: optionTemplate.maxCardinality,
                         contentObserver: (function () {
-                            var content = this.get("content");
-                            var name = this.get("name");
+                            var content = this.get('content');
+                            var name = this.get('name');
                             var configMap = configArray[0];
                             configMap[name] = content;
                             configArray.setObjects([configMap]);
                             optionTemplate.value = content;
-                        }).observes("content.@each").on("init")
+                        }).observes('content.@each').on('init')
                     }).create();
 
                     this.pushObject(view);
                 }
             } finally {
-                console.log("VISUALIZATION OPTIONS VIEW - CREATED CONFIGURATION ARRAY");
+                console.log('VISUALIZATION OPTIONS VIEW - CREATED CONFIGURATION ARRAY');
                 console.dir(configArray);
 
                 // Inside finally block to make sure that this is executed even if the for loop crashes
                 configArray.endPropertyChanges();
             }
-        }).observes("options").on("init")
+        }).observes('options').on('init')
     });
 
 });
@@ -6996,7 +7230,7 @@ catch(err) {
 if (runningTests) {
   require("linda-vis-fe/tests/test-helper");
 } else {
-  require("linda-vis-fe/app")["default"].create({"name":"linda-vis-fe","version":"0.0.0.b0537671"});
+  require("linda-vis-fe/app")["default"].create({"name":"linda-vis-fe","version":"0.0.0.540633f8"});
 }
 
 /* jshint ignore:end */
